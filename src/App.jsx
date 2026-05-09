@@ -184,7 +184,7 @@ const App = () => {
             <li>Meet <strong>Balaram</strong> at the far end of the village.</li>
           </ul>
         </li>
-        <li><strong>Time Limit:</strong> Yashoda Mayya is sleeping, but she will wake up in exactly 16 moves. You must finish your tasks and return to the starting home exactly on your 16th move!</li>
+        <li><strong>Move Limit:</strong> Yashoda Mayya is sleeping, but she will wake up in exactly 16 moves. You must finish your tasks and return to the starting home exactly on your 16th move!</li>
       </ul>
     </>
   );
