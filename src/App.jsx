@@ -175,13 +175,14 @@ const App = () => {
   const InstructionsContent = () => (
     <>
       <h2>Story & Rules</h2>
-      <p>Each square on the grid represents a home in Vrindavan.</p>
+      <p>Each square on the grid represents a Gopi's home in Vrindavan. You play as Krishna.</p>
       <ul style={{textAlign: 'left', margin: '10px 0 10px 20px'}}>
         <li><strong>Movement:</strong> Krishna can move horizontally or vertically to an adjacent square, one step at a time.</li>
         <li><strong>Objectives:</strong>
           <ul>
             <li>Eat all <strong>9 butter pots</strong> (🧈).</li>
             <li>Meet <strong>Balaram</strong> at the far end of the village.</li>
+            <li>Krishna has to return back to his home.</li>
           </ul>
         </li>
         <li><strong>Move Limit:</strong> Yashoda Mayya is sleeping, but she will wake up in exactly 16 moves. You must finish your tasks and return to the starting home exactly on your 16th move!</li>
@@ -222,11 +223,26 @@ const App = () => {
         </div>
 
         <div className="menu-instructions" style={{ textAlign: 'center', borderColor: gameState === 'VICTORY' ? '#33ff33' : '#ff3333' }}>
-          <h2>{gameState === 'VICTORY' ? 'You saved the day!' : 'Yashoda Mayya caught you!'}</h2>
+          <h2>{gameState === 'VICTORY' ? 'Navaneet chor ki Jai!!' : 'Yashoda Mayya caught you!'}</h2>
           <p>
             {gameState === 'VICTORY' 
               ? 'You successfully ate all the butter, met Balaram, and returned safely before Yashoda Mayya woke up.' 
-              : 'You did not complete all the objectives or failed to return exactly on the 16th move!'}
+              : (() => {
+                  const isHome = playerPos.r === 0 && playerPos.c === 0;
+                  const hasButter = butterEaten === TARGET_BUTTER;
+                  
+                  if (!isHome) {
+                    if (hasButter && hasReachedBalaram) return "You ate all the butter and met Balaram, but you did not reach back home on time!";
+                    if (hasButter) return "You ate all the butter, but didn't meet Balaram or reach back home on time!";
+                    if (hasReachedBalaram) return "You met Balaram, but didn't eat all the butter or reach back home on time!";
+                    return "You ran out of moves before completing your tasks and returning home!";
+                  } else {
+                    if (!hasButter && !hasReachedBalaram) return "You returned home on time, but you didn't eat all the butter or meet Balaram!";
+                    if (!hasButter) return "You returned home and met Balaram, but you didn't eat all the butter!";
+                    if (!hasReachedBalaram) return "You returned home and ate all the butter, but you didn't meet Balaram!";
+                  }
+                  return "You did not complete all the objectives!";
+              })()}
           </p>
         </div>
         
@@ -299,8 +315,11 @@ const App = () => {
                 className={`cell ${valid ? 'valid-move' : ''} ${isPlayerHere ? 'player-cell' : ''} ${isBalaramHere && !isPlayerHere ? 'balaram-cell' : ''}`}
                 onClick={() => handleCellClick(r, c)}
               >
-                {isPlayerHere && (
+                {isPlayerHere && !(r === 0 && c === 0 && history.length > 0) && (
                   <img src="/images/Krishna.jpg" alt="Krishna" className="character-img" />
+                )}
+                {r === 0 && c === 0 && (!isPlayerHere || history.length > 0) && (
+                  <span style={{ fontSize: '2.5rem' }}>🏠</span>
                 )}
                 {!isPlayerHere && isBalaramHere && (
                   <>

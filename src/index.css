@@ -162,11 +162,6 @@ body {
 /* Title Section */
 .title-section {
   text-align: center;
-  background: rgba(0, 243, 255, 0.05);
-  border: 1px solid var(--neon-cyan);
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
 }
 
 .sanskrit-title {
