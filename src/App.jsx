@@ -25,8 +25,10 @@ const App = () => {
   
   const [showInstructions, setShowInstructions] = useState(false);
   
-  const [isMusicMuted, setIsMusicMuted] = useState(true);
+  const [isMusicMuted, setIsMusicMuted] = useState(false);
   const [isSfxMuted, setIsSfxMuted] = useState(false);
+
+  const [invalidCell, setInvalidCell] = useState(null);
 
   const [windowDimension, setWindowDimension] = useState({ width: window.innerWidth, height: window.innerHeight });
 
@@ -47,7 +49,10 @@ const App = () => {
 
   useEffect(() => {
     if (!isMusicMuted) {
-      audioRef.current?.play().catch(e => console.log("Audio play prevented:", e));
+      audioRef.current?.play().catch(e => {
+        console.log("Audio play prevented:", e);
+        setIsMusicMuted(true);
+      });
     } else {
       audioRef.current?.pause();
     }
@@ -78,18 +83,41 @@ const App = () => {
   };
 
   const playMoveSound = () => playBeep(300, 'square', 0.1);
-  const playEatSound = () => playBeep(800, 'sine', 0.15);
+  const playEatSound = () => {
+    if (isSfxMuted) return;
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+      oscillator.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.2);
+
+      gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.3);
+    } catch (e) { }
+  };
   const playErrorSound = () => playBeep(150, 'sawtooth', 0.2);
 
   const checkWinLossCondition = () => {
     if (gameState === 'VICTORY' || gameState === 'DEFEAT') return;
 
+    const isHome = playerPos.r === 0 && playerPos.c === 0;
+    const hasButter = butterEaten === TARGET_BUTTER;
+
+    if (isHome && hasReachedBalaram && hasButter && movesLeft >= 0) {
+      setGameState('VICTORY');
+      return;
+    }
+
     if (movesLeft === 0) {
-      if (playerPos.r === 0 && playerPos.c === 0 && hasReachedBalaram && butterEaten === TARGET_BUTTER) {
-        setGameState('VICTORY');
-      } else {
-        setGameState('DEFEAT');
-      }
+      setGameState('DEFEAT');
     }
   };
 
@@ -110,6 +138,8 @@ const App = () => {
     
     if (!isValidMove(r, c)) {
       playErrorSound();
+      setInvalidCell({ r, c });
+      setTimeout(() => setInvalidCell(null), 300);
       return;
     }
 
@@ -190,10 +220,34 @@ const App = () => {
     </>
   );
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (gameState !== 'PLAYING') return;
+      let newR = playerPos.r;
+      let newC = playerPos.c;
+
+      if (e.key === 'ArrowUp' || e.key === 'w') newR -= 1;
+      else if (e.key === 'ArrowDown' || e.key === 's') newR += 1;
+      else if (e.key === 'ArrowLeft' || e.key === 'a') newC -= 1;
+      else if (e.key === 'ArrowRight' || e.key === 'd') newC += 1;
+      else return;
+
+      if (newR >= 0 && newR < grid.length && newC >= 0 && newC < grid[0].length) {
+        handleCellClick(newR, newC);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState, playerPos, grid, butterEaten, movesLeft, hasReachedBalaram]);
+
   if (gameState === 'MENU') {
     return (
       <div className="app-container menu-container">
-        <h1 className="sanskrit-title menu-title">चौराष्टकम्</h1>
+        <div style={{ textAlign: 'center' }}>
+          <h1 className="sanskrit-title menu-title">चौराष्टकम् </h1>
+          <p className="subtitle">The Butter Thief of Vrindavan</p>
+        </div>
         
         <div className="menu-image-wrapper">
           <img src="/images/KrishnaButter.png" alt="Krishna with Butter" className="menu-hero-img" />
@@ -211,39 +265,67 @@ const App = () => {
   }
 
   if (gameState === 'VICTORY' || gameState === 'DEFEAT') {
+    const isHome = playerPos.r === 0 && playerPos.c === 0;
+    const hasButter = butterEaten === TARGET_BUTTER;
+
+    let resultTitle = '';
+    let resultImage = '';
+    let resultHeader = '';
+    let resultMessage = '';
+
+    if (gameState === 'VICTORY') {
+      resultTitle = 'Victory!';
+      resultImage = '/images/KrishnaButter.png';
+      resultHeader = 'Navaneet chor ki Jai!!';
+      resultMessage = 'You successfully ate all the butter, met Balaram, and returned safely before Yashoda Mayya woke up.';
+    } else {
+      if (!isHome) {
+        resultTitle = 'Yashoda Mayya caught you!';
+        resultImage = '/images/Yashoda.jpg';
+        resultHeader = 'Yashoda Mayya caught you!';
+        if (hasButter && hasReachedBalaram) resultMessage = "You ate all the butter and met Balaram, but you did not reach back home on time!";
+        else if (hasButter) resultMessage = "You ate all the butter, but didn't meet Balaram or reach back home on time!";
+        else if (hasReachedBalaram) resultMessage = "You met Balaram, but didn't eat all the butter or reach back home on time!";
+        else resultMessage = "You ran out of moves before completing your tasks and returning home!";
+      } else if (!hasReachedBalaram) {
+        resultTitle = 'Balaram misses you';
+        resultImage = '/images/Balaram.png';
+        resultHeader = 'Balaram misses you';
+        if (!hasButter) resultMessage = "You returned home on time, but you didn't eat all the butter or meet Balaram!";
+        else resultMessage = "You returned home and ate all the butter, but you didn't meet Balaram!";
+      } else if (!hasButter) {
+        resultTitle = 'You missed some butter';
+        resultImage = 'emoji:🧈';
+        resultHeader = 'You missed some butter';
+        resultMessage = "You returned home and met Balaram, but you didn't eat all the butter!";
+      } else {
+        resultTitle = 'Game Over!';
+        resultImage = '/images/Yashoda.jpg';
+        resultHeader = 'Time ran out!';
+        resultMessage = "You did not complete all the objectives!";
+      }
+    }
+
     return (
       <div className="app-container menu-container">
         {gameState === 'VICTORY' && <Confetti width={windowDimension.width} height={windowDimension.height} />}
-        <h1 className="sanskrit-title menu-title">
-          {gameState === 'VICTORY' ? 'Victory!' : 'Game Over!'}
+        <h1 className="sanskrit-title menu-title" style={{ fontSize: '2.5rem', textAlign: 'center' }}>
+          {resultTitle}
         </h1>
         
         <div className="menu-image-wrapper" style={{ borderColor: gameState === 'VICTORY' ? '#33ff33' : '#ff3333', boxShadow: `0 0 25px ${gameState === 'VICTORY' ? '#33ff33' : '#ff3333'}` }}>
-          <img src={gameState === 'VICTORY' ? "/images/KrishnaButter.png" : "/images/Yashoda.jpg"} alt="Result" className="menu-hero-img" />
+          {resultImage.startsWith('emoji:') ? (
+            <span style={{ fontSize: '5rem', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>
+              {resultImage.replace('emoji:', '')}
+            </span>
+          ) : (
+            <img src={resultImage} alt="Result" className="menu-hero-img" />
+          )}
         </div>
 
         <div className="menu-instructions" style={{ textAlign: 'center', borderColor: gameState === 'VICTORY' ? '#33ff33' : '#ff3333' }}>
-          <h2>{gameState === 'VICTORY' ? 'Navaneet chor ki Jai!!' : 'Yashoda Mayya caught you!'}</h2>
-          <p>
-            {gameState === 'VICTORY' 
-              ? 'You successfully ate all the butter, met Balaram, and returned safely before Yashoda Mayya woke up.' 
-              : (() => {
-                  const isHome = playerPos.r === 0 && playerPos.c === 0;
-                  const hasButter = butterEaten === TARGET_BUTTER;
-                  
-                  if (!isHome) {
-                    if (hasButter && hasReachedBalaram) return "You ate all the butter and met Balaram, but you did not reach back home on time!";
-                    if (hasButter) return "You ate all the butter, but didn't meet Balaram or reach back home on time!";
-                    if (hasReachedBalaram) return "You met Balaram, but didn't eat all the butter or reach back home on time!";
-                    return "You ran out of moves before completing your tasks and returning home!";
-                  } else {
-                    if (!hasButter && !hasReachedBalaram) return "You returned home on time, but you didn't eat all the butter or meet Balaram!";
-                    if (!hasButter) return "You returned home and met Balaram, but you didn't eat all the butter!";
-                    if (!hasReachedBalaram) return "You returned home and ate all the butter, but you didn't meet Balaram!";
-                  }
-                  return "You did not complete all the objectives!";
-              })()}
-          </p>
+          <h2>{resultHeader}</h2>
+          <p>{resultMessage}</p>
         </div>
         
         <div style={{ display: 'flex', gap: '1rem' }}>
@@ -273,7 +355,8 @@ const App = () => {
       )}
 
       <div className="title-section">
-        <h1 className="sanskrit-title">चौराष्टकम्</h1>
+        <h1 className="sanskrit-title">🦚 चौराष्टकम् 🦚</h1>
+        <p className="subtitle">The Butter Thief of Vrindavan</p>
       </div>
 
       <div className="header">
@@ -308,13 +391,19 @@ const App = () => {
             const isPlayerHere = playerPos.r === r && playerPos.c === c;
             const isBalaramHere = BALARAM_POS.r === r && BALARAM_POS.c === c;
             const valid = isValidMove(r, c) && gameState === 'PLAYING';
+            const objectivesMet = butterEaten === TARGET_BUTTER && hasReachedBalaram;
+            const isHome = r === 0 && c === 0;
+            const isInvalid = invalidCell?.r === r && invalidCell?.c === c;
 
             return (
               <div
                 key={`${r}-${c}`}
-                className={`cell ${valid ? 'valid-move' : ''} ${isPlayerHere ? 'player-cell' : ''} ${isBalaramHere && !isPlayerHere ? 'balaram-cell' : ''}`}
+                className={`cell ${valid ? 'valid-move' : ''} ${isPlayerHere ? 'player-cell' : ''} ${isBalaramHere && !isPlayerHere ? 'balaram-cell' : ''} ${isInvalid ? 'shake' : ''}`}
                 onClick={() => handleCellClick(r, c)}
               >
+                {isHome && objectivesMet && !isPlayerHere && (
+                  <div className="go-home-indicator">Come Back, Krishna!</div>
+                )}
                 {isPlayerHere && !(r === 0 && c === 0 && history.length > 0) && (
                   <img src="/images/Krishna.jpg" alt="Krishna" className="character-img" />
                 )}
@@ -325,6 +414,7 @@ const App = () => {
                   <>
                     <img src="/images/Balaram.png" alt="Balaram" className="character-img" />
                     {hasReachedBalaram && <span className="balaram-thumbs-up">👍</span>}
+                    {!hasReachedBalaram && <div className="meet-me-label">Meet me!</div>}
                   </>
                 )}
                 {!isPlayerHere && !isBalaramHere && cell === 1 && (
