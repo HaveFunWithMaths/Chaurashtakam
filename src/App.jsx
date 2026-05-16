@@ -25,6 +25,7 @@ const App = () => {
   const [history, setHistory] = useState([]);
 
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showMoreInfo, setShowMoreInfo] = useState(false);
 
   const [isMusicMuted, setIsMusicMuted] = useState(false);
   const [isSfxMuted, setIsSfxMuted] = useState(false);
@@ -198,10 +199,12 @@ const App = () => {
     setHistory([]);
     setGameState('PLAYING');
     setIsMusicMuted(false); // Enable music when game starts
+    setShowMoreInfo(false);
   };
 
   const goHome = () => {
     setGameState('MENU');
+    setShowMoreInfo(false);
   };
 
   const GameTutorial = () => {
@@ -304,6 +307,22 @@ const App = () => {
         <button className="cyber-btn start-btn" onClick={restartGame}>
           Start Game
         </button>
+
+        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+          <button className="cyber-btn" style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }} onClick={() => setShowMoreInfo(!showMoreInfo)}>
+            Know more about Chaurastakam
+          </button>
+        </div>
+
+        {showMoreInfo && (
+          <div className="menu-instructions" style={{ textAlign: 'left', fontSize: '0.9rem', lineHeight: '1.4', marginTop: '1rem' }}>
+            <p>The Chaurastakam (literally translating to "Eight Verses to the Thief") is a beautiful, witty Sanskrit hymn composed by the saint Bilvamangala Thakura. It takes Krishna’s playful habit of stealing and elevates it into a profound spiritual masterpiece.The prayer highlights that Krishna steals:</p>
+            <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
+              <li style={{ marginBottom: '0.5rem' }}><strong>Your Sins:</strong> He doesn’t just steal butter; He steals mountains of karmic sins (papa) accumulated over millions of lifetimes, wiping your slate clean.</li>
+              <li><strong>Radha’s Heart:</strong> He is the thief who stole the heart of Srimati Radhika.</li>
+            </ul>
+          </div>
+        )}
       </div>
     );
   }
@@ -327,26 +346,18 @@ const App = () => {
         resultTitle = 'Yashoda Mayya caught you!';
         resultImage = '/images/Yashoda.jpg';
         resultHeader = 'Yashoda Mayya caught you!';
-        if (hasButter && hasReachedBalaram) resultMessage = "You ate all the butter and met Balaram, but you did not reach back home on time!";
-        else if (hasButter) resultMessage = "You ate all the butter, but didn't meet Balaram or reach back home on time!";
-        else if (hasReachedBalaram) resultMessage = "You met Balaram, but didn't eat all the butter or reach back home on time!";
-        else resultMessage = "You ran out of moves before completing your tasks and returning home!";
       } else if (!hasReachedBalaram) {
         resultTitle = 'Balaram misses you';
         resultImage = '/images/Balaram.png';
         resultHeader = 'Balaram misses you';
-        if (!hasButter) resultMessage = "You returned home on time, but you didn't eat all the butter or meet Balaram!";
-        else resultMessage = "You returned home and ate all the butter, but you didn't meet Balaram!";
       } else if (!hasButter) {
         resultTitle = 'You missed some butter';
         resultImage = '/images/Butter.png';
         resultHeader = 'You missed some butter';
-        resultMessage = "You returned home and met Balaram, but you didn't eat all the butter!";
       } else {
         resultTitle = 'Game Over!';
         resultImage = '/images/Yashoda.jpg';
         resultHeader = 'Time ran out!';
-        resultMessage = "You did not complete all the objectives!";
       }
     }
 
@@ -369,10 +380,18 @@ const App = () => {
 
         <div className="menu-instructions" style={{ textAlign: 'center', borderColor: gameState === 'VICTORY' ? '#33ff33' : '#ff3333' }}>
           <h2>{resultHeader}</h2>
-          <p>{resultMessage}</p>
+          {gameState === 'VICTORY' ? (
+            <p>{resultMessage}</p>
+          ) : (
+            <div style={{ textAlign: 'left', display: 'inline-block', margin: '0 auto' }}>
+              <p style={{ margin: '0.5rem 0' }}>Met Balaram? {hasReachedBalaram ? '✅' : '❌'}</p>
+              <p style={{ margin: '0.5rem 0' }}>Ate all Butter? {hasButter ? '✅' : '❌'}</p>
+              <p style={{ margin: '0.5rem 0' }}>Reached Back home in 16 Moves? {isHome ? '✅' : '❌'}</p>
+            </div>
+          )}
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '1rem' }}>
           <button className="cyber-btn" onClick={restartGame}>
             🔄 Play Again
           </button>
@@ -380,6 +399,22 @@ const App = () => {
             🏠 Main Menu
           </button>
         </div>
+
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+          <button className="cyber-btn" style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }} onClick={() => setShowMoreInfo(!showMoreInfo)}>
+            Know more about Chaurastakam
+          </button>
+        </div>
+
+        {showMoreInfo && (
+          <div className="menu-instructions" style={{ textAlign: 'left', fontSize: '0.9rem', lineHeight: '1.4' }}>
+            <p>The Chaurastakam (literally translating to "Eight Verses to the Thief") is a beautiful, witty Sanskrit hymn composed by the saint Bilvamangala Thakura. It takes Krishna’s playful habit of stealing and elevates it into a profound spiritual masterpiece.The prayer highlights that Krishna steals:</p>
+            <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem' }}>
+              <li style={{ marginBottom: '0.5rem' }}><strong>Your Sins:</strong> He doesn’t just steal butter; He steals mountains of karmic sins (papa) accumulated over millions of lifetimes, wiping your slate clean.</li>
+              <li><strong>Radha’s Heart:</strong> He is the thief who stole the heart of Srimati Radhika.</li>
+            </ul>
+          </div>
+        )}
       </div>
     );
   }

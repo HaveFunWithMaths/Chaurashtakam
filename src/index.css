@@ -78,8 +78,8 @@ body {
 }
 
 .menu-image-wrapper {
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   border: 3px solid var(--golden-border);
   box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
