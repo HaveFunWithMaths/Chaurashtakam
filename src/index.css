@@ -217,7 +217,29 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  white-space: nowrap;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+}
+
+.stat-value {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.moves-count {
+  font-size: 1.2rem;
+}
+
+.game-objective-text {
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: var(--neon-cyan);
+  letter-spacing: 0.5px;
+  padding: 0 10px;
 }
 
 .butter-icon {
@@ -435,35 +457,60 @@ body {
 /* Mobile Responsiveness */
 @media (max-width: 480px) {
   .header {
-    padding: 0.6rem;
-    gap: 0.4rem;
+    flex-direction: column;
+    padding: 0.8rem;
+    gap: 0.8rem;
+    align-items: center;
+    text-align: center;
+    min-height: auto;
   }
 
   .yashoda-container {
-    min-width: 70px;
-    margin-left: -5px;
+    min-width: 100px;
+    margin: 0 auto;
   }
 
   .yashoda-img {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
   }
 
   .stats {
-    font-size: 0.7rem;
+    align-items: center;
+    width: 100%;
     gap: 0.3rem;
   }
 
   .stat-row {
-    gap: 0.3rem;
+    justify-content: center;
+    width: 100%;
+    gap: 0.4rem;
   }
 
-  .stat-row span:first-child {
-    font-size: 0.7rem;
+  .moves-row {
+    white-space: nowrap;
   }
 
-  .stat-row span:last-child {
-    font-size: 1rem !important;
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .stat-value {
+    font-size: 0.9rem;
+  }
+
+  .moves-count {
+    font-size: 1.1rem !important;
+  }
+
+  .game-objective-text {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+  }
+
+  .grid-container {
+    gap: 1.5vmin;
+    padding: 1.5vmin;
   }
 
   .sanskrit-title {

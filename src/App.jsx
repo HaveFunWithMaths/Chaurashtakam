@@ -408,27 +408,27 @@ const App = () => {
           <span style={{ fontSize: '0.7rem', color: '#ccc' }}>Yashoda Mayya</span>
         </div>
         <div className="stats">
-          <div className="stat-row">
-            <span>Moves till Yashoda Mayya wakes:</span>
-            <span style={{ color: movesLeft <= 3 ? '#ff3333' : 'var(--neon-cyan)', fontWeight: 'bold', fontSize: '1.2rem' }}>
+          <div className="stat-row moves-row">
+            <span className="stat-label">Moves till Yashoda Mayya wakes:</span>
+            <span className="stat-value moves-count" style={{ color: movesLeft <= 3 ? '#ff3333' : 'var(--neon-cyan)' }}>
               {movesLeft} 
             </span>
           </div>
           <div className="stat-row">
-            <span>Butters Eaten:</span>
-            <img src="/images/Butter.png" alt="Butter" className="butter-icon" style={{ width: '1.5rem', height: '1.5rem' }} />
-            <span style={{ color: 'var(--neon-yellow)', fontWeight: 'bold' }}>
+            <span className="stat-label">Butters Eaten:</span>
+            <img src="/images/Butter.png" alt="Butter" className="butter-icon" style={{ width: '1.2rem', height: '1.2rem' }} />
+            <span className="stat-value" style={{ color: 'var(--neon-yellow)' }}>
               {butterEaten}/{TARGET_BUTTER}
             </span>
           </div>
           <div className="stat-row">
-            <span>Met Balaram:</span>
-            <span>{hasReachedBalaram ? '✅' : '❌'}</span>
+            <span className="stat-label">Met Balaram:</span>
+            <span className="stat-value">{hasReachedBalaram ? '✅' : '❌'}</span>
           </div>
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', marginBottom: '15px', fontSize: '1rem', fontWeight: 'bold', color: 'var(--neon-cyan)', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+      <div className="game-objective-text">
         Meet Balaram & Return Home while eating all Butter
       </div>
 
