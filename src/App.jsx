@@ -197,6 +197,7 @@ const App = () => {
     setHasReachedBalaram(false);
     setHistory([]);
     setGameState('PLAYING');
+    setIsMusicMuted(false); // Enable music when game starts
   };
 
   const goHome = () => {
@@ -409,7 +410,9 @@ const App = () => {
         </div>
         <div className="stats">
           <div className="stat-row moves-row">
-            <span className="stat-label">Moves till Yashoda Mayya wakes:</span>
+            <span className="stat-label">
+              {windowDimension.width <= 480 ? 'Moves till Mayya wakes:' : 'Moves till Yashoda Mayya wakes:'}
+            </span>
             <span className="stat-value moves-count" style={{ color: movesLeft <= 3 ? '#ff3333' : 'var(--neon-cyan)' }}>
               {movesLeft} 
             </span>
