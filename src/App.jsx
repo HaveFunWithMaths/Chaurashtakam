@@ -213,15 +213,15 @@ const App = () => {
       },
       {
         video: "/videos/Balaram.mp4",
-        text: <>Krishna should meet Balaram</>
+        text: <><span style={{ color: 'var(--neon-cyan)' }}>Objective 1:</span> Krishna should meet Balaram</>
       },
       {
         video: "/videos/Home.mp4",
-        text: <>Krishna should return back Home in <strong style={{ color: '#ff3333' }}>16</strong> moves</>
+        text: <><span style={{ color: 'var(--neon-cyan)' }}>Objective 2:</span> Krishna should return back Home in <strong style={{ color: '#ff3333' }}>16</strong> moves</>
       },
       {
         video: "/videos/EatButter.mp4",
-        text: <>While meeting Balaram and coming back Home Krishna should eat all the butter.</>
+        text: <><span style={{ color: 'var(--neon-cyan)' }}>Objective 3:</span> While meeting Balaram & coming back Home, Krishna should eat all the butter.</>
       }
     ];
 
