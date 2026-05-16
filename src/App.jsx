@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Confetti from 'react-confetti';
+import { motion } from 'framer-motion';
 
 const INITIAL_GRID = [
   [0, 1, 1, 0, 0],
@@ -15,16 +16,16 @@ const BALARAM_POS = { r: 4, c: 4 };
 
 const App = () => {
   const [gameState, setGameState] = useState('MENU'); // 'MENU', 'PLAYING', 'VICTORY', 'DEFEAT'
-  
+
   const [grid, setGrid] = useState(INITIAL_GRID.map(row => [...row]));
   const [playerPos, setPlayerPos] = useState({ r: 0, c: 0 });
   const [movesLeft, setMovesLeft] = useState(INITIAL_MOVES);
   const [butterEaten, setButterEaten] = useState(0);
   const [hasReachedBalaram, setHasReachedBalaram] = useState(false);
   const [history, setHistory] = useState([]);
-  
+
   const [showInstructions, setShowInstructions] = useState(false);
-  
+
   const [isMusicMuted, setIsMusicMuted] = useState(false);
   const [isSfxMuted, setIsSfxMuted] = useState(false);
 
@@ -65,16 +66,16 @@ const App = () => {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
-      
+
       oscillator.type = type;
       oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      
+
       gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
-      
+
       oscillator.start();
       oscillator.stop(audioCtx.currentTime + duration);
     } catch (e) {
@@ -135,7 +136,7 @@ const App = () => {
 
   const handleCellClick = (r, c) => {
     if (gameState !== 'PLAYING') return;
-    
+
     if (!isValidMove(r, c)) {
       playErrorSound();
       setInvalidCell({ r, c });
@@ -156,7 +157,7 @@ const App = () => {
 
     const newGrid = grid.map(row => [...row]);
     let newButterCount = butterEaten;
-    
+
     if (newGrid[r][c] === 1) {
       newGrid[r][c] = 0;
       newButterCount += 1;
@@ -169,7 +170,7 @@ const App = () => {
     setPlayerPos({ r, c });
     setMovesLeft(prev => prev - 1);
     setButterEaten(newButterCount);
-    
+
     if (r === BALARAM_POS.r && c === BALARAM_POS.c) {
       setHasReachedBalaram(true);
     }
@@ -178,13 +179,13 @@ const App = () => {
   const undo = () => {
     if (history.length === 0 || gameState !== 'PLAYING') return;
     const lastState = history[history.length - 1];
-    
+
     setGrid(lastState.grid);
     setPlayerPos(lastState.playerPos);
     setMovesLeft(lastState.movesLeft);
     setButterEaten(lastState.butterEaten);
     setHasReachedBalaram(lastState.hasReachedBalaram);
-    
+
     setHistory(prev => prev.slice(0, -1));
   };
 
@@ -202,23 +203,65 @@ const App = () => {
     setGameState('MENU');
   };
 
-  const InstructionsContent = () => (
-    <>
-      <h2>Story & Rules</h2>
-      <p>Each square on the grid represents a Gopi's home in Vrindavan. You play as Krishna.</p>
-      <ul style={{textAlign: 'left', margin: '10px 0 10px 20px'}}>
-        <li><strong>Movement:</strong> Krishna can move horizontally or vertically to an adjacent square, one step at a time.</li>
-        <li><strong>Objectives:</strong>
-          <ul>
-            <li>Eat all <strong>9 butter pots</strong> (🧈).</li>
-            <li>Meet <strong>Balaram</strong> at the far end of the village.</li>
-            <li>Krishna has to return back to his home.</li>
-          </ul>
-        </li>
-        <li><strong>Move Limit:</strong> Yashoda Mayya is sleeping, but she will wake up in exactly 16 moves. You must finish your tasks and return to the starting home exactly on your 16th move!</li>
-      </ul>
-    </>
-  );
+  const GameTutorial = () => {
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    const slides = [
+      {
+        video: "/videos/Movement.mp4",
+        text: <>Krishna can move Horizontally (➡️ ⬅️) or vertically (⬆️ ⬇️)</>
+      },
+      {
+        video: "/videos/Balaram.mp4",
+        text: <>Krishna should meet Balaram</>
+      },
+      {
+        video: "/videos/Home.mp4",
+        text: <>Krishna should return back Home in <strong style={{ color: '#ff3333' }}>16</strong> moves</>
+      },
+      {
+        video: "/videos/EatButter.mp4",
+        text: <>While meeting Balaram and coming back Home Krishna should eat all the butter.</>
+      }
+    ];
+
+    const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+    const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+
+    return (
+      <div className="tutorial-carousel" style={{ position: 'relative', textAlign: 'center', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+        <video 
+          key={slides[currentSlide].video}
+          src={slides[currentSlide].video} 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          style={{ width: '100%', borderRadius: '10px', marginBottom: '1rem', border: '2px solid var(--neon-cyan)', maxHeight: '300px', objectFit: 'contain' }} 
+        />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: '80px' }}>
+          <button onClick={prevSlide} className="cyber-btn icon-btn" style={{ fontSize: '1.2rem', padding: '0.5rem', minWidth: '40px' }}>{'<'}</button>
+          <p style={{ flex: 1, margin: '0 10px', fontSize: '1rem', fontWeight: 'bold' }}>
+            {slides[currentSlide].text}
+          </p>
+          <button onClick={nextSlide} className="cyber-btn icon-btn" style={{ fontSize: '1.2rem', padding: '0.5rem', minWidth: '40px' }}>{'>'}</button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '10px' }}>
+          {slides.map((_, idx) => (
+            <div 
+              key={idx} 
+              onClick={() => setCurrentSlide(idx)}
+              style={{ 
+                width: '12px', height: '12px', borderRadius: '50%', cursor: 'pointer',
+                backgroundColor: currentSlide === idx ? 'var(--neon-cyan)' : '#555',
+                transition: 'background-color 0.3s'
+              }} 
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -236,7 +279,7 @@ const App = () => {
         handleCellClick(newR, newC);
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState, playerPos, grid, butterEaten, movesLeft, hasReachedBalaram]);
@@ -248,15 +291,15 @@ const App = () => {
           <h1 className="sanskrit-title menu-title">चौराष्टकम् </h1>
           <p className="subtitle">The Butter Thief of Vrindavan</p>
         </div>
-        
+
         <div className="menu-image-wrapper">
           <img src="/images/KrishnaButter.png" alt="Krishna with Butter" className="menu-hero-img" />
         </div>
-        
+
         <div className="menu-instructions">
-          <InstructionsContent />
+          <GameTutorial />
         </div>
-        
+
         <button className="cyber-btn start-btn" onClick={restartGame}>
           Start Game
         </button>
@@ -295,7 +338,7 @@ const App = () => {
         else resultMessage = "You returned home and ate all the butter, but you didn't meet Balaram!";
       } else if (!hasButter) {
         resultTitle = 'You missed some butter';
-        resultImage = 'emoji:🧈';
+        resultImage = '/images/Butter.png';
         resultHeader = 'You missed some butter';
         resultMessage = "You returned home and met Balaram, but you didn't eat all the butter!";
       } else {
@@ -312,7 +355,7 @@ const App = () => {
         <h1 className="sanskrit-title menu-title" style={{ fontSize: '2.5rem', textAlign: 'center' }}>
           {resultTitle}
         </h1>
-        
+
         <div className="menu-image-wrapper" style={{ borderColor: gameState === 'VICTORY' ? '#33ff33' : '#ff3333', boxShadow: `0 0 25px ${gameState === 'VICTORY' ? '#33ff33' : '#ff3333'}` }}>
           {resultImage.startsWith('emoji:') ? (
             <span style={{ fontSize: '5rem', filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}>
@@ -327,7 +370,7 @@ const App = () => {
           <h2>{resultHeader}</h2>
           <p>{resultMessage}</p>
         </div>
-        
+
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button className="cyber-btn" onClick={restartGame}>
             🔄 Play Again
@@ -346,8 +389,8 @@ const App = () => {
       {showInstructions && (
         <div className="modal-overlay">
           <div className="modal-content menu-instructions">
-            <InstructionsContent />
-            <button className="cyber-btn" onClick={() => setShowInstructions(false)} style={{marginTop: '1rem', width: '100%'}}>
+            <GameTutorial />
+            <button className="cyber-btn" onClick={() => setShowInstructions(false)} style={{ marginTop: '1rem', width: '100%' }}>
               Close
             </button>
           </div>
@@ -355,7 +398,7 @@ const App = () => {
       )}
 
       <div className="title-section">
-        <h1 className="sanskrit-title">🦚 चौराष्टकम् 🦚</h1>
+        <h1 className="sanskrit-title">🪷 चौराष्टकम् 🪷</h1>
         <p className="subtitle">The Butter Thief of Vrindavan</p>
       </div>
 
@@ -372,8 +415,8 @@ const App = () => {
             </span>
           </div>
           <div className="stat-row">
-            <span>Butter:</span>
-            <span className="butter-icon">🧈</span>
+            <span>Butters Eaten:</span>
+            <img src="/images/Butter.png" alt="Butter" className="butter-icon" style={{ width: '1.5rem', height: '1.5rem' }} />
             <span style={{ color: 'var(--neon-yellow)', fontWeight: 'bold' }}>
               {butterEaten}/{TARGET_BUTTER}
             </span>
@@ -383,6 +426,10 @@ const App = () => {
             <span>{hasReachedBalaram ? '✅' : '❌'}</span>
           </div>
         </div>
+      </div>
+
+      <div style={{ textAlign: 'center', marginBottom: '15px', fontSize: '1rem', fontWeight: 'bold', color: 'var(--neon-cyan)', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+        Meet Balaram & Return Home while eating all Butter
       </div>
 
       <div className="grid-container">
@@ -404,10 +451,16 @@ const App = () => {
                 {isHome && objectivesMet && !isPlayerHere && (
                   <div className="go-home-indicator">Come Back, Krishna!</div>
                 )}
-                {isPlayerHere && !(r === 0 && c === 0 && history.length > 0) && (
-                  <img src="/images/Krishna.jpg" alt="Krishna" className="character-img" />
+                {isPlayerHere && isBalaramHere && (
+                  <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <motion.img layoutId="krishna" transition={{ type: "spring", stiffness: 300, damping: 30 }} src="/images/Krishna.jpg" alt="Krishna" className="character-img" style={{ position: 'absolute', top: 0, left: 0, width: '65%', height: '65%', zIndex: 2 }} />
+                    <img src="/images/Balaram.png" alt="Balaram" className="character-img" style={{ position: 'absolute', bottom: 0, right: 0, width: '65%', height: '65%', zIndex: 1 }} />
+                  </div>
                 )}
-                {r === 0 && c === 0 && (!isPlayerHere || history.length > 0) && (
+                {isPlayerHere && !isBalaramHere && (
+                  <motion.img layoutId="krishna" transition={{ type: "spring", stiffness: 300, damping: 30 }} src="/images/Krishna.jpg" alt="Krishna" className="character-img" />
+                )}
+                {r === 0 && c === 0 && !isPlayerHere && (
                   <span style={{ fontSize: '2.5rem' }}>🏠</span>
                 )}
                 {!isPlayerHere && isBalaramHere && (
@@ -418,7 +471,7 @@ const App = () => {
                   </>
                 )}
                 {!isPlayerHere && !isBalaramHere && cell === 1 && (
-                  <span className="butter-item">🧈</span>
+                  <img src="/images/Butter.png" alt="Butter" className="butter-item" style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
                 )}
               </div>
             );
@@ -431,7 +484,7 @@ const App = () => {
           <button className="cyber-btn icon-btn" onClick={goHome} title="Home">
             🏠
           </button>
-          
+
           <button className="cyber-btn icon-btn" onClick={() => setShowInstructions(true)} title="Instructions">
             📖
           </button>
@@ -443,10 +496,10 @@ const App = () => {
           <button className="cyber-btn icon-btn" onClick={restartGame} title="Restart Game">
             🔄
           </button>
-          
+
           <div className="audio-controls">
-            <button 
-              className="cyber-btn icon-btn" 
+            <button
+              className="cyber-btn icon-btn"
               onClick={() => setIsMusicMuted(!isMusicMuted)}
               title="Toggle Music"
             >
@@ -454,8 +507,8 @@ const App = () => {
                 🎵
               </div>
             </button>
-            <button 
-              className="cyber-btn icon-btn" 
+            <button
+              className="cyber-btn icon-btn"
               onClick={() => setIsSfxMuted(!isSfxMuted)}
               title="Toggle Sound Effects"
             >
