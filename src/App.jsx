@@ -411,7 +411,7 @@ const App = () => {
           <div className="stat-row">
             <span>Moves till Yashoda Mayya wakes:</span>
             <span style={{ color: movesLeft <= 3 ? '#ff3333' : 'var(--neon-cyan)', fontWeight: 'bold', fontSize: '1.2rem' }}>
-              {movesLeft}
+              {movesLeft} 
             </span>
           </div>
           <div className="stat-row">
